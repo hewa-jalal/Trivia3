@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Trivia3</string>
+    <string name="correct_answer">correct</string>
+    <string name="wrong_answer">wrong</string>
+</resources>
