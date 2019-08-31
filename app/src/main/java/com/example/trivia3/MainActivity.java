@@ -3,6 +3,7 @@ package com.example.trivia3;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
@@ -19,6 +20,7 @@ import com.example.trivia3.data.AnswerListAsyncResponse;
 import com.example.trivia3.data.QuestionBank;
 import com.example.trivia3.model.Question;
 
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,6 +28,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private TextView tv_question;
     private TextView tv_counter;
+    private TextView tv_highScore;
     private Button btn_true;
     private Button btn_false;
     private ImageButton ibtn_next;
@@ -33,6 +36,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TextView tv_score;
     private int currentQuestionindex = 0;
     private int score = 0;
+    private int highScore = score;
     private List<Question> questionList;
 
     @Override
@@ -46,6 +50,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         btn_true = findViewById(R.id.btn_true);
         ibtn_next = findViewById(R.id.ibtn_next);
         ibtn_prev = findViewById(R.id.ibtn_prev);
+        tv_highScore = findViewById(R.id.tv_highscore);
 
         btn_false.setOnClickListener(this);
         btn_true.setOnClickListener(this);
@@ -60,6 +65,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Log.d("Main", "processFinished: " + questionArrayList);
             }
         });
+
+        SharedPreferences getSharedData = getSharedPreferences("sp", MODE_PRIVATE);
+
+        highScore = getSharedData.getInt("highScore", 0);
+        tv_highScore.setText("Your high score is " + highScore);
+
 
     }
 
@@ -97,18 +108,35 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             fadeView();
             toastMsgId = R.string.correct_answer;
             score++;
+            // don't save when score is less than high score
+            if (score > highScore) {
+                SharedPreferences sharedPreferences = getSharedPreferences("sp", MODE_PRIVATE);
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putInt("highScore", score);
+                editor.apply();
+                tv_highScore.setText("Your high score is " + score);
+            }
             tv_score.setText("Your Score is:" + score);
+
         } else {
             shakeAnimation();
             toastMsgId = R.string.wrong_answer;
+            if (score > 0) {
+                score--;
+            }
+            tv_score.setText("Your Score is:" + score);
+
+
         }
         Toast.makeText(MainActivity.this, toastMsgId, Toast.LENGTH_SHORT).show();
+        updateQuestion();
+        currentQuestionindex = (currentQuestionindex + 1) % questionList.size();
     }
 
     public void updateQuestion() {
         String question = questionList.get(currentQuestionindex).getAnswer();
         tv_question.setText(question);
-        tv_counter.setText(currentQuestionindex + " / " + questionList.size());
+        tv_counter.setText(MessageFormat.format("{0} / {1}", currentQuestionindex, questionList.size()));
     }
 
 
